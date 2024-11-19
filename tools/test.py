@@ -7,8 +7,7 @@ import warnings
 import mmcv
 import torch
 from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
-from mmcv.runner import (get_dist_info, init_dist, load_checkpoint,
-                         wrap_fp16_model)
+from mmcv.runner import get_dist_info, init_dist, load_checkpoint, wrap_fp16_model
 from mmcv.utils import DictAction
 
 from depth.apis import multi_gpu_test, single_gpu_test
@@ -17,71 +16,63 @@ from depth.models import build_depther
 
 import numpy as np
 
+
 def parse_args():
-    parser = argparse.ArgumentParser(
-        description='depth test (and eval) a model')
-    parser.add_argument('config', help='test config file path')
-    parser.add_argument('checkpoint', help='checkpoint file')
+    parser = argparse.ArgumentParser(description="depth test (and eval) a model")
+    parser.add_argument("config", help="test config file path")
+    parser.add_argument("checkpoint", help="checkpoint file")
+    parser.add_argument("--aug-test", action="store_true", help="Use Flip and Multi scale aug")
+    parser.add_argument("--out", help="output result file in pickle format")
     parser.add_argument(
-        '--aug-test', action='store_true', help='Use Flip and Multi scale aug')
-    parser.add_argument('--out', help='output result file in pickle format')
+        "--format-only",
+        action="store_true",
+        help="Format the output results without perform evaluation. It is"
+        "useful when you want to format the result to a specific format and "
+        "submit it to the test server",
+    )
     parser.add_argument(
-        '--format-only',
-        action='store_true',
-        help='Format the output results without perform evaluation. It is'
-        'useful when you want to format the result to a specific format and '
-        'submit it to the test server')
-    parser.add_argument(
-        '--eval',
+        "--eval",
         type=str,
-        nargs='+',
+        nargs="+",
         help='evaluation metrics, which depends on the dataset, e.g., "mIoU"'
-        ' for generic datasets, and "cityscapes" for Cityscapes')
-    parser.add_argument('--show', action='store_true', help='show results')
+        ' for generic datasets, and "cityscapes" for Cityscapes',
+    )
+    parser.add_argument("--show", action="store_true", help="show results")
+    parser.add_argument("--show-dir", help="directory where painted images will be saved")
+    parser.add_argument("--gpu-collect", action="store_true", help="whether to use gpu to collect results.")
     parser.add_argument(
-        '--show-dir', help='directory where painted images will be saved')
+        "--tmpdir",
+        help="tmp directory used for collecting results from multiple "
+        "workers, available when gpu_collect is not specified",
+    )
+    parser.add_argument("--options", nargs="+", action=DictAction, help="custom options")
+    parser.add_argument("--eval-options", nargs="+", action=DictAction, help="custom options for evaluation")
+    parser.add_argument("--launcher", choices=["none", "pytorch", "slurm", "mpi"], default="none", help="job launcher")
+    parser.add_argument("--local_rank", type=int, default=0)
     parser.add_argument(
-        '--gpu-collect',
-        action='store_true',
-        help='whether to use gpu to collect results.')
-    parser.add_argument(
-        '--tmpdir',
-        help='tmp directory used for collecting results from multiple '
-        'workers, available when gpu_collect is not specified')
-    parser.add_argument(
-        '--options', nargs='+', action=DictAction, help='custom options')
-    parser.add_argument(
-        '--eval-options',
-        nargs='+',
-        action=DictAction,
-        help='custom options for evaluation')
-    parser.add_argument(
-        '--launcher',
-        choices=['none', 'pytorch', 'slurm', 'mpi'],
-        default='none',
-        help='job launcher')
-    parser.add_argument('--local_rank', type=int, default=0)
+        "--dinov2_size", type=str, choices=["small", "base", "large", "giant"], help="DINOv2 model size"
+    )
     args = parser.parse_args()
-    if 'LOCAL_RANK' not in os.environ:
-        os.environ['LOCAL_RANK'] = str(args.local_rank)
+    if "LOCAL_RANK" not in os.environ:
+        os.environ["LOCAL_RANK"] = str(args.local_rank)
     return args
 
 
 def main():
     args = parse_args()
 
-    assert args.out or args.eval or args.format_only or args.show \
-        or args.show_dir, \
-        ('Please specify at least one operation (save/eval/format/show the '
-         'results / save the results) with the argument "--out", "--eval"'
-         ', "--format-only", "--show" or "--show-dir"')
+    assert args.out or args.eval or args.format_only or args.show or args.show_dir, (
+        "Please specify at least one operation (save/eval/format/show the "
+        'results / save the results) with the argument "--out", "--eval"'
+        ', "--format-only", "--show" or "--show-dir"'
+    )
 
     if args.eval and args.format_only:
-        raise ValueError('--eval and --format_only cannot be both specified')
+        raise ValueError("--eval and --format_only cannot be both specified")
 
-    if args.out is not None and not args.out.endswith(('.pkl', '.pickle')):
-        raise ValueError('The output file must be a pkl file.')
-    
+    if args.out is not None and not args.out.endswith((".pkl", ".pickle")):
+        raise ValueError("The output file must be a pkl file.")
+
     if args.out:
         print(os.path.dirname(args.out))
         mmcv.mkdir_or_exist(os.path.dirname(args.out))
@@ -90,19 +81,17 @@ def main():
     if args.options is not None:
         cfg.merge_from_dict(args.options)
     # set cudnn_benchmark
-    if cfg.get('cudnn_benchmark', False):
+    if cfg.get("cudnn_benchmark", False):
         torch.backends.cudnn.benchmark = True
     if args.aug_test:
         # hard code index
-        cfg.data.test.pipeline[1].img_ratios = [
-            0.5, 0.75, 1.0, 1.25, 1.5, 1.75
-        ]
+        cfg.data.test.pipeline[1].img_ratios = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75]
         cfg.data.test.pipeline[1].flip = True
     cfg.model.pretrained = None
     cfg.data.test.test_mode = True
 
     # init distributed env first, since logger depends on the dist info.
-    if args.launcher == 'none':
+    if args.launcher == "none":
         distributed = False
     else:
         distributed = True
@@ -112,42 +101,39 @@ def main():
     # TODO: support multiple images per gpu (only minor changes are needed)
     dataset = build_dataset(cfg.data.test)
     data_loader = build_dataloader(
-        dataset,
-        samples_per_gpu=1,
-        workers_per_gpu=cfg.data.workers_per_gpu,
-        dist=distributed,
-        shuffle=False)
+        dataset, samples_per_gpu=1, workers_per_gpu=cfg.data.workers_per_gpu, dist=distributed, shuffle=False
+    )
 
     # build the model and load checkpoint
     cfg.model.train_cfg = None
 
-    model = build_depther(
-        cfg.model,
-        test_cfg=cfg.get('test_cfg'))
-    
-    fp16_cfg = cfg.get('fp16', None)
+    if args.dinov2_size is not None:
+        from depth.utils import build_dino_depther
+
+        model = build_dino_depther(cfg, args.dinov2_size, train=False)
+    else:
+        model = build_depther(cfg.model, test_cfg=cfg.get("test_cfg"))
+
+    fp16_cfg = cfg.get("fp16", None)
     if fp16_cfg is not None:
         wrap_fp16_model(model)
-    
+
     # for other models
-    checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu')
+    checkpoint = load_checkpoint(model, args.checkpoint, map_location="cpu")
 
     # clean gpu memory when starting a new evaluation.
     torch.cuda.empty_cache()
     eval_kwargs = {} if args.eval_options is None else args.eval_options
 
-    eval_on_format_results = (
-        args.eval is not None and 'cityscapes' in args.eval)
+    eval_on_format_results = args.eval is not None and "cityscapes" in args.eval
     if eval_on_format_results:
-        assert len(args.eval) == 1, 'eval on format results is not ' \
-                                    'applicable for metrics other than ' \
-                                    'cityscapes'
+        assert len(args.eval) == 1, "eval on format results is not " "applicable for metrics other than " "cityscapes"
     if args.format_only or eval_on_format_results:
-        if 'imgfile_prefix' in eval_kwargs:
-            tmpdir = eval_kwargs['imgfile_prefix']
+        if "imgfile_prefix" in eval_kwargs:
+            tmpdir = eval_kwargs["imgfile_prefix"]
         else:
-            tmpdir = '.format_cityscapes'
-            eval_kwargs.setdefault('imgfile_prefix', tmpdir)
+            tmpdir = ".format_cityscapes"
+            eval_kwargs.setdefault("imgfile_prefix", tmpdir)
         mmcv.mkdir_or_exist(tmpdir)
     else:
         tmpdir = None
@@ -161,12 +147,12 @@ def main():
             args.show_dir,
             pre_eval=args.eval is not None and not eval_on_format_results,
             format_only=args.format_only or eval_on_format_results,
-            format_args=eval_kwargs)
+            format_args=eval_kwargs,
+        )
     else:
         model = MMDistributedDataParallel(
-            model.cuda(),
-            device_ids=[torch.cuda.current_device()],
-            broadcast_buffers=False)
+            model.cuda(), device_ids=[torch.cuda.current_device()], broadcast_buffers=False
+        )
         results = multi_gpu_test(
             model,
             data_loader,
@@ -174,16 +160,18 @@ def main():
             args.gpu_collect,
             pre_eval=args.eval is not None and not eval_on_format_results,
             format_only=args.format_only or eval_on_format_results,
-            format_args=eval_kwargs)
+            format_args=eval_kwargs,
+        )
 
     rank, _ = get_dist_info()
     if rank == 0:
         if args.out:
             warnings.warn(
-                'The pickled outputs could be depth map as type of '
-                'np.array, pre-eval results or file paths for '
-                '``dataset.format_results()``.')
-            print(f'\nwriting results to {args.out}')
+                "The pickled outputs could be depth map as type of "
+                "np.array, pre-eval results or file paths for "
+                "``dataset.format_results()``."
+            )
+            print(f"\nwriting results to {args.out}")
             mmcv.dump(results, args.out)
         if args.eval:
             dataset.evaluate(results, args.eval, **eval_kwargs)
@@ -192,5 +180,5 @@ def main():
             shutil.rmtree(tmpdir)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

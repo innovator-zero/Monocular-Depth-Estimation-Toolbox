@@ -70,7 +70,8 @@ class BNHead(DepthBaseDecodeHead):
                 x, cls_token = x[0], x[1]
                 if len(x.shape) == 2:
                     x = x[:, :, None, None]
-                cls_token = cls_token.squeeze(1)
+                if len(cls_token.shape) == 3:
+                    cls_token = cls_token.squeeze(1)
                 cls_token = cls_token[:, :, None, None].expand_as(x)
                 inputs[i] = torch.cat((x, cls_token), 1)
             else:

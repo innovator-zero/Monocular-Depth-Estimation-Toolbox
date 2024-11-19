@@ -3,5 +3,13 @@ from .collect_env import collect_env
 from .logger import get_root_logger
 from .position_encoding import SinePositionalEncoding, LearnedPositionalEncoding
 from .color_depth import colorize
+from .dinov2_util import build_dino_depther
 
-__all__ = ['get_root_logger', 'collect_env', 'SinePositionalEncoding', 'LearnedPositionalEncoding', 'colorize']
+__all__ = [
+    "get_root_logger",
+    "collect_env",
+    "SinePositionalEncoding",
+    "LearnedPositionalEncoding",
+    "colorize",
+    "build_dino_depther",
+]
