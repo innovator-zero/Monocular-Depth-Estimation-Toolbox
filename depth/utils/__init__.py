@@ -4,6 +4,7 @@ from .logger import get_root_logger
 from .position_encoding import SinePositionalEncoding, LearnedPositionalEncoding
 from .color_depth import colorize
 from .dinov2_util import build_dino_depther
+from .cal_param import cal_params
 
 __all__ = [
     "get_root_logger",
@@ -12,4 +13,5 @@ __all__ = [
     "LearnedPositionalEncoding",
     "colorize",
     "build_dino_depther",
+    "cal_params",
 ]

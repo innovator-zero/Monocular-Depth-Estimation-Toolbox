@@ -7,14 +7,14 @@ import time
 
 import mmcv
 import torch
-from mmcv.runner import init_dist
+from mmcv.runner import init_dist, load_checkpoint
 from mmcv.utils import Config, DictAction, get_git_hash
 
 from depth import __version__
 from depth.apis import set_random_seed, train_depther
 from depth.datasets import build_dataset
 from depth.models import build_depther
-from depth.utils import collect_env, get_root_logger
+from depth.utils import collect_env, get_root_logger, cal_params
 
 
 def parse_args():
@@ -120,7 +120,9 @@ def main():
         model = build_dino_depther(cfg, args.dinov2_size)
     else:
         model = build_depther(cfg.model, train_cfg=cfg.get("train_cfg"), test_cfg=cfg.get("test_cfg"))
-        model.init_weights()
+        # model.init_weights()
+
+    cal_params(model, logger)
 
     # NOTE: set all the bn to syncbn
     import torch.nn as nn

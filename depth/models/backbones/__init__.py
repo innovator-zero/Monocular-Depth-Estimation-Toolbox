@@ -2,5 +2,6 @@
 # from .efficientnet import EfficientNet
 # from .depthformer_swin import DepthFormerSwin
 # from .swin import SwinTransformer
-# from .vit import VisionTransformer
+from .vit import VisionTransformer
 from .vision_transformer import DinoVisionTransformer
+from .sak import SAK

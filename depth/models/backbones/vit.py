@@ -182,6 +182,7 @@ class VisionTransformer(BaseModule):
                  norm_eval=False,
                  with_cp=False,
                  pretrained=None,
+                 freeze=False,
                  init_cfg=None):
         super(VisionTransformer, self).__init__(init_cfg=init_cfg)
 
@@ -270,6 +271,10 @@ class VisionTransformer(BaseModule):
             self.norm1_name, norm1 = build_norm_layer(
                 norm_cfg, embed_dims, postfix=1)
             self.add_module(self.norm1_name, norm1)
+
+        if freeze:
+            for param in self.parameters():
+                param.requires_grad = False
 
     @property
     def norm1(self):
