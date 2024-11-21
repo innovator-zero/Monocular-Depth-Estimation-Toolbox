@@ -16,6 +16,9 @@ from depth.datasets import build_dataset
 from depth.models import build_depther
 from depth.utils import collect_env, get_root_logger, cal_params
 
+os.environ["HF_HOME"] = "../checkpoints"
+os.environ["TORCH_HOME"] = "../checkpoints"
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Train a depthor")
@@ -40,9 +43,7 @@ def parse_args():
     parser.add_argument("--options", nargs="+", action=DictAction, help="custom options")
     parser.add_argument("--launcher", choices=["none", "pytorch", "slurm", "mpi"], default="none", help="job launcher")
     parser.add_argument("--local_rank", type=int, default=0)
-    parser.add_argument(
-        "--dinov2_size", type=str, choices=["small", "base", "large", "giant"], help="DINOv2 model size"
-    )
+    parser.add_argument("--model", type=str)
     args = parser.parse_args()
     if "LOCAL_RANK" not in os.environ:
         os.environ["LOCAL_RANK"] = str(args.local_rank)
@@ -114,10 +115,14 @@ def main():
     meta["seed"] = args.seed
     meta["exp_name"] = osp.basename(args.config)
 
-    if args.dinov2_size is not None:
+    if "dinov2" in args.model:
         from depth.utils import build_dino_depther
 
-        model = build_dino_depther(cfg, args.dinov2_size)
+        model = build_dino_depther(cfg, args.model.split("_")[1])
+    elif "radio" in args.model:
+        from depth.utils import build_radio_depther
+
+        model = build_radio_depther(cfg, args.model.split("_")[1])
     else:
         model = build_depther(cfg.model, train_cfg=cfg.get("train_cfg"), test_cfg=cfg.get("test_cfg"))
         # model.init_weights()
