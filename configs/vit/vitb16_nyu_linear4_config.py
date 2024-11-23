@@ -114,7 +114,7 @@ model = dict(
         final_norm=False,
         with_cls_token=True,
         output_cls_token=True,
-        out_indices=[11],
+        out_indices=[2, 5, 8, 11],
         pretrained="../checkpoints/B_16-i21k-300ep-lr_0.001-aug_medium1-wd_0.1-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.01-res_384.npz",
         freeze=False,
     ),
@@ -132,10 +132,10 @@ model = dict(
         bins_strategy="UD",
         norm_strategy="linear",
         upsample=4,
-        in_channels=[768],
-        in_index=[0],
+        in_channels=[768, 768, 768, 768],
+        in_index=[0, 1, 2, 3],
         input_transform="resize_concat",
-        channels=1536,
+        channels=6144,
         align_corners=False,
     ),
     train_cfg=dict(),
@@ -177,4 +177,4 @@ evaluation = dict(
     greater_keys=("a1", "a2", "a3"),
     less_keys=("abs_rel", "rmse"),
 )
-work_dir = "results/vitb16_nyu_linear"
+work_dir = "results/vitb16_nyu_linear4"

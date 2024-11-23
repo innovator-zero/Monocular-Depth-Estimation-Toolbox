@@ -5,3 +5,4 @@
 from .vit import VisionTransformer
 from .vision_transformer import DinoVisionTransformer
 from .sak import SAK
+from .sam import SAM

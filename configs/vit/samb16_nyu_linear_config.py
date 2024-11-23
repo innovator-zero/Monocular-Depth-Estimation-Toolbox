@@ -106,17 +106,11 @@ cudnn_benchmark = True
 model = dict(
     type="DepthEncoderDecoder",
     backbone=dict(
-        type="VisionTransformer",
-        img_size=224,
-        embed_dims=768,
-        num_layers=12,
-        num_heads=12,
-        final_norm=False,
-        with_cls_token=True,
-        output_cls_token=True,
+        type="SAM",
+        img_size=(416, 544),
+        backbone_type="sam_base",
         out_indices=[11],
-        pretrained="../checkpoints/B_16-i21k-300ep-lr_0.001-aug_medium1-wd_0.1-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.01-res_384.npz",
-        freeze=False,
+        freeze=True,
     ),
     decode_head=dict(
         type="BNHead",
@@ -177,4 +171,4 @@ evaluation = dict(
     greater_keys=("a1", "a2", "a3"),
     less_keys=("abs_rel", "rmse"),
 )
-work_dir = "results/vitb16_nyu_linear"
+work_dir = "results/samb16_nyu_linear"
