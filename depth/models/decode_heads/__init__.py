@@ -8,3 +8,4 @@ from .dpt_head import DPTHead
 # from .newcrfs import NewCRFHead
 
 from .linear_head import BNHead
+from .linear_head_nocls import BNHead_nocls

@@ -1,5 +1,5 @@
 dataset_type = "NYUDataset"
-data_root = "/sharedata/datasets/nyu"
+data_root = "data/nyu"
 img_norm_cfg = dict(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 crop_size = (416, 544)
 train_pipeline = [
@@ -111,9 +111,10 @@ model = dict(
         backbone_type="sam_base",
         out_indices=[11],
         freeze=True,
+        resize=False,
     ),
     decode_head=dict(
-        type="BNHead",
+        type="BNHead_nocls",
         norm_cfg=None,
         min_depth=0.001,
         max_depth=10,
@@ -129,7 +130,7 @@ model = dict(
         in_channels=[768],
         in_index=[0],
         input_transform="resize_concat",
-        channels=1536,
+        channels=768,
         align_corners=False,
     ),
     train_cfg=dict(),

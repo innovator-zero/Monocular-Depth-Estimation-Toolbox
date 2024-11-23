@@ -115,14 +115,15 @@ def main():
     meta["seed"] = args.seed
     meta["exp_name"] = osp.basename(args.config)
 
-    if "dinov2" in args.model:
-        from depth.utils import build_dino_depther
+    if args.model is not None:
+        if "dinov2" in args.model:
+            from depth.utils import build_dino_depther
 
-        model = build_dino_depther(cfg, args.model.split("_")[1])
-    elif "radio" in args.model:
-        from depth.utils import build_radio_depther
+            model = build_dino_depther(cfg, args.model.split("_")[1])
+        elif "radio" in args.model:
+            from depth.utils import build_radio_depther
 
-        model = build_radio_depther(cfg, args.model.split("_")[1])
+            model = build_radio_depther(cfg, args.model.split("_")[1])
     else:
         model = build_depther(cfg.model, train_cfg=cfg.get("train_cfg"), test_cfg=cfg.get("test_cfg"))
         # model.init_weights()
