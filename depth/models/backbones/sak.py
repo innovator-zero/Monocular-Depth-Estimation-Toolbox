@@ -7,8 +7,6 @@ from mmcv.runner import BaseModule
 
 from ..builder import BACKBONES
 
-# from .vit import VisionTransformer
-
 
 class Adapter(nn.Module):
     """
