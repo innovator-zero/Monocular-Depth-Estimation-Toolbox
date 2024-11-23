@@ -128,7 +128,8 @@ class SAK(BaseModule):
     def __init__(
         self,
         img_size: tuple,
-        tea_dims: dict,
+        vit_name: str = "vit_base_patch16_384",
+        tea_dims: dict = dict(dinov2=768, clip=768, sam=768),
         down_ratio: int = 4,
         router_type: str = "global",
         freeze: bool = True,
@@ -138,9 +139,20 @@ class SAK(BaseModule):
     ):
 
         super().__init__(*args, **kwargs)
-        from .myvit import vit_base_patch16_384
+        if vit_name == "vit_small_patch16_384":
+            from .myvit import vit_small_patch16_384
 
-        self.vit = vit_base_patch16_384(img_size=img_size, pretrained=False, dynamic_img_size=True)
+            self.vit = vit_small_patch16_384(img_size=img_size, pretrained=True, dynamic_img_size=True)
+        elif vit_name == "vit_base_patch16_384":
+            from .myvit import vit_base_patch16_384
+
+            self.vit = vit_base_patch16_384(img_size=img_size, pretrained=True, dynamic_img_size=True)
+        elif vit_name == "vit_large_patch16_384":
+            from .myvit import vit_large_patch16_384
+
+            self.vit = vit_large_patch16_384(img_size=img_size, pretrained=True, dynamic_img_size=True)
+        else:
+            raise NotImplementedError
         self.vit.norm = None
 
         self.embed_dim = self.vit.embed_dim
