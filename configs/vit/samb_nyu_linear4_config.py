@@ -1,5 +1,5 @@
 dataset_type = "NYUDataset"
-data_root = "/sharedata/datasets/nyu"
+data_root = "data/nyu"
 img_norm_cfg = dict(mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 crop_size = (416, 544)
 train_pipeline = [
@@ -106,20 +106,15 @@ cudnn_benchmark = True
 model = dict(
     type="DepthEncoderDecoder",
     backbone=dict(
-        type="VisionTransformer",
-        img_size=224,
-        embed_dims=1024,
-        num_layers=24,
-        num_heads=16,
-        final_norm=False,
-        with_cls_token=True,
-        output_cls_token=True,
-        out_indices=[4, 11, 17, 23],
-        pretrained="../checkpoints/L_16-i21k-300ep-lr_0.001-aug_strong1-wd_0.1-do_0.0-sd_0.0--imagenet2012-steps_20k-lr_0.01-res_384.npz",
+        type="SAM",
+        img_size=(416, 544),
+        backbone_type="sam_base",
+        out_indices=[2, 5, 8, 11],
         freeze=True,
+        resize=False,
     ),
     decode_head=dict(
-        type="BNHead",
+        type="BNHead_nocls",
         norm_cfg=None,
         min_depth=0.001,
         max_depth=10,
@@ -132,10 +127,10 @@ model = dict(
         bins_strategy="UD",
         norm_strategy="linear",
         upsample=4,
-        in_channels=[1024, 1024, 1024, 1024],
+        in_channels=[768, 768, 768, 768],
         in_index=[0, 1, 2, 3],
         input_transform="resize_concat",
-        channels=8192,
+        channels=3072,
         align_corners=False,
     ),
     train_cfg=dict(),
@@ -177,4 +172,4 @@ evaluation = dict(
     greater_keys=("a1", "a2", "a3"),
     less_keys=("abs_rel", "rmse"),
 )
-work_dir = "results/vitl16_nyu_linear4"
+work_dir = "results/samb_nyu_linear4"

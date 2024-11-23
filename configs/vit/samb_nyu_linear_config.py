@@ -172,4 +172,4 @@ evaluation = dict(
     greater_keys=("a1", "a2", "a3"),
     less_keys=("abs_rel", "rmse"),
 )
-work_dir = "results/samb16_nyu_linear"
+work_dir = "results/samb_nyu_linear"
